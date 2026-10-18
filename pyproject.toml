@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vega-umbrella-sdk"
+version = "0.1.0"
+description = "The umbrella: assembles the SDK family as one organism (one keyed ledger, one approval check, one anchor over every chain) with a registry of owned concerns and a pre-deploy audit gate."
+requires-python = ">=3.10"
+dependencies = ["vega-custody-sdk", "vega-governance-jacket-sdk", "vega-terminal-sdk", "vega-trace-sdk", "vega-reasoning-sdk", "vega-metacog-sdk", "vega-governance-feed-sdk", "vega-council-sdk"]
+license = {file = "LICENSE"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
