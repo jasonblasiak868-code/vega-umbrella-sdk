@@ -1,0 +1,1 @@
+{"allow_prefixes": ["git status", "git diff", "python -m unittest"]}

@@ -132,7 +132,7 @@ Not wired yet: vega-dkg-lattice-sdk (repo ingestion), vega-galaxy-sdk, vega-chip
 
 **Unified.** This is the unifying kit. Its registry entry is layer 15, `assemble`, owning the assembly of the family as one organism. The family map is in [ORGANISM.md](ORGANISM.md).
 
-Step-by-step install from GitHub, and how to use the kits in VS Code: [USE_IN_VS_CODE.md](USE_IN_VS_CODE.md).
+Step-by-step install from GitHub, and how to use the kits in VS Code: [USE_IN_VS_CODE.md](USE_IN_VS_CODE.md). How to install on other systems, connect models and put a gate in front of an agent CLI: [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md).
 
 ## Diagnostic control
 
