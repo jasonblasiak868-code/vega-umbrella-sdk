@@ -180,8 +180,9 @@ class Organism:
     def library(self, root, matrix=None):
         return self._need("vega_council.library").ReferenceLibrary(root, self.lane("council"), matrix)
 
-    def metacog_ledger(self, author):
-        return self._need("vega_metacog.requirements").Ledger(self.lane("metacog"), author)
+    def metacog_ledger(self, author, human_check=None):
+        """human_check(requirement id, verifier id) -> exactly True settles a 'human' requirement; without one no human requirement can be settled (fails closed)."""
+        return self._need("vega_metacog.requirements").Ledger(self.lane("metacog"), author, human_check=human_check)
 
     def trace_chain(self):
         return self.lane("trace")

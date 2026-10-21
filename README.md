@@ -123,7 +123,7 @@ User-defined constraints may be STRICTER than the legal minimum for the applicab
 
 ## The family map
 
-Seventeen kits ship in this release. The full layer diagram, the two flows that never mix and the dependency table are in [ORGANISM.md](ORGANISM.md). The registry also reserves concerns for further kits that are not part of this release.
+Twenty-two kits ship in this release (19 built, 3 partial); the registry also lists one design-only kit (the neural galaxy). The full layer diagram, the two flows that never mix and the dependency table are in [ORGANISM.md](ORGANISM.md). The registry also reserves concerns for further kits that are not part of this release.
 
 ## Tests
 
