@@ -104,7 +104,8 @@ class Organism:
         self.dag = self._chain("anchor")
         self.ledger = Ledger([LocalBackend(os.path.join(self.home, "ledger.jsonl"))], commitment_check=verify.commitment_signature_checker(public_key))
         self.verifier = human_verifier or humanauth.Verifier(public_key, device, surface)
-        self.gate = ExitGate(Commit(self.verifier, self.ledger, self.dag), self.ledger, self.verifier, self.dag)
+        self.commit = Commit(self.verifier, self.ledger, self.dag)                  # the one Commit: every gate below burns approvals through it
+        self.gate = ExitGate(self.commit, self.ledger, self.verifier, self.dag)
         self.approvals = Approvals(self.gate, lambda: humanauth.Verifier(public_key, device, surface))
         self._lanes = {}
 
@@ -190,6 +191,83 @@ class Organism:
     def observe_ledger(self):
         return self._need("vega_trace.nnr").ObserveLedger(self.lane("trace"))
 
+    # the rest of the family, on the SAME ledger, the SAME approval path and one chain per kit ---------------------------------------------------
+    def commit_for(self, action, params, signed):
+        """Turn a human signature for exactly (action, params) into a minted commitment on the shared ledger. Single use. Hand the result to a Conductor step, a Kronos job,
+        a training run or any other gate that asks for a commitment: they all check THIS ledger."""
+        try:
+            return self.gate.release(action, params, signed, route="human")["commitment"]
+        except Exception as exc:  # noqa: BLE001 - Denied, CommitRefused, HumanAuthError: all mean no commitment
+            raise OrganismRefused("no commitment: %s" % exc) from exc
+
+    def _chain_file(self, name):
+        d = os.path.join(self.home, "chains")
+        os.makedirs(d, exist_ok=True)
+        return os.path.join(d, name)
+
+    def conductor(self, preflight=None, token_cap=None):
+        """The deterministic Conductor (vega-harness-sdk): its human-only steps are checked against the organism's ledger."""
+        h, rec = self._need("vega_harness.conductor"), self._need("vega_harness.records")
+        return h.Conductor(self._chain_file("harness_runs.jsonl"), self._chain_file("harness_registry.jsonl"), preflight=preflight, commitment_check=rec.make_ledger_check(self.ledger),
+                           token_cap=token_cap)
+
+    def arsenal(self, path=None, embed=None, use_matrix=None):
+        """The war chest index (vega-harness-sdk)."""
+        return self._need("vega_harness.arsenal").Arsenal(path, embed=embed, use_matrix=use_matrix)
+
+    def plan(self, request, deps=None, conductor=None, execute=False, commitment=None, spec_commitment=None):
+        """The pre-execution reasoning pipeline (vega-harness-sdk) on this organism's Conductor and ledger. Pass deps={'arsenal': organism.arsenal().as_dependency(), ...}."""
+        p, rec = self._need("vega_harness.reasoning_pipeline"), self._need("vega_harness.records")
+        deps = dict(deps or {})
+        deps.setdefault("commitment_check", rec.make_ledger_check(self.ledger))
+        return p.plan(request, conductor or self.conductor(), deps=deps, commitment=commitment, spec_commitment=spec_commitment, execute=execute,
+                      path_log=self._chain_file("harness_paths.jsonl"))
+
+    def containment(self, bind_job=True):
+        """Kronos (vega-two-gate-sdk): returns (Containment, HardStop). Jobs and the hard stop are checked against the organism's ledger."""
+        k, g = self._need("vega_twogate.kronos.contain"), self._need("vega_jacket.gate.entry_gate")
+        dag = self.lane("kronos")
+        hs = k.HardStop(os.path.join(self.home, "HARD_STOP"), dag, self.ledger)
+        return k.Containment(g.EntryGate(dag), hs, dag, self.ledger.reader(), bind_job=bind_job), hs
+
+    def lift_hard_stop(self, hard_stop, params, signed):
+        """Lift a Kronos hard stop. Only a human signature for exactly restore_after_hard_stop does it."""
+        return hard_stop.restore(self.commit, params, signed)
+
+    def pre_deck(self):
+        return self._need("vega_pareah.cards.pre").PreDeck()
+
+    def airlock(self, door_id="door-1"):
+        return self._need("vega_pareah.adapter.airlock").Airlock(self.commit, self.ledger.reader(), self.lane("pareah"), door_id)
+
+    def pareah(self, airlock=None, pre_deck=None):
+        return self._need("vega_pareah.adapter.pareah").Pareah(self.commit, self.ledger.reader(), self.lane("pareah"), airlock=airlock, pre_deck=pre_deck)
+
+    def identity(self, secret, pepper, vault_key, **kw):
+        return self._need("vega_identity.service").Identity(self.lane("identity"), secret, pepper, vault_key, **kw)
+
+    def journal(self, path, **kw):
+        return self._need("vega_journal.journal").Journal(path, self.lane("journal"), **kw)
+
+    def private_journal(self, path, owner_sign_public, master_key=None, **kw):
+        return self._need("vega_journal.private").PrivateJournal(path, self.lane("journal"), owner_sign_public, master_key, **kw)
+
+    def jurisdictions(self, **kw):
+        return self._need("vega_jurisdiction.protocol").Jurisdictions(self.commit, self.lane("jurisdiction"), **kw)
+
+    def need_book(self, record, institutions=None, **kw):
+        return self._need("vega_need.book").NeedBook(self.lane("need"), record, institutions, commit=self.commit, **kw)
+
+    def training_run(self, run_dir, plan, env, data, pre_card, data_root, **kw):
+        rec = self._need("vega_harness.records")
+        kw.setdefault("commitment_check", rec.make_ledger_check(self.ledger))
+        kw.setdefault("burn", rec.RecordChain(self._chain_file("commitments_used.jsonl")))
+        return self._need("vega_train.run").TrainingRun(run_dir, plan, env, data, pre_card, data_root, **kw)
+
+    def seal(self, capsule, key1, key2, signing_key, signing_public, preset="standard"):
+        """Layered sealing (vega-superproof-sdk) written to this organism's seal lane and minted on its ledger."""
+        return self._need("vega_superproof.seal.superproof").seal(capsule, key1, key2, signing_key, signing_public, self.lane("seal"), self.ledger, preset)
+
     def feed(self, state_path=None):
         """A governance feed over the anchor and every lane that exists NOW (build it after the lanes it should watch)."""
         return self._need("vega_feed.feed").Feed(self.lane_paths(), state_path=state_path)
@@ -245,4 +323,84 @@ def _feed_feed():
     return m
 
 
-_IMPORTERS = {"vega_terminal.session": _terminal_session, "vega_reasoning.records": _reasoning_records, "vega_reasoning.morna": _reasoning_morna, "vega_reasoning.lyra": _reasoning_lyra, "vega_council.deliberation": _council_deliberation, "vega_council.builder": _council_builder, "vega_council.library": _council_library, "vega_metacog.requirements": _metacog_requirements, "vega_trace.nnr": _trace_nnr, "vega_feed.feed": _feed_feed}
+def _imp_vega_harness_conductor():
+    import vega_harness.conductor as m
+    return m
+
+
+def _imp_vega_harness_records():
+    import vega_harness.records as m
+    return m
+
+
+def _imp_vega_harness_arsenal():
+    import vega_harness.arsenal as m
+    return m
+
+
+def _imp_vega_harness_reasoning_pipeline():
+    import vega_harness.reasoning_pipeline as m
+    return m
+
+
+def _imp_vega_twogate_kronos_contain():
+    import vega_twogate.kronos.contain as m
+    return m
+
+
+def _imp_vega_jacket_gate_entry_gate():
+    import vega_jacket.gate.entry_gate as m
+    return m
+
+
+def _imp_vega_pareah_cards_pre():
+    import vega_pareah.cards.pre as m
+    return m
+
+
+def _imp_vega_pareah_adapter_airlock():
+    import vega_pareah.adapter.airlock as m
+    return m
+
+
+def _imp_vega_pareah_adapter_pareah():
+    import vega_pareah.adapter.pareah as m
+    return m
+
+
+def _imp_vega_identity_service():
+    import vega_identity.service as m
+    return m
+
+
+def _imp_vega_journal_journal():
+    import vega_journal.journal as m
+    return m
+
+
+def _imp_vega_journal_private():
+    import vega_journal.private as m
+    return m
+
+
+def _imp_vega_jurisdiction_protocol():
+    import vega_jurisdiction.protocol as m
+    return m
+
+
+def _imp_vega_need_book():
+    import vega_need.book as m
+    return m
+
+
+def _imp_vega_train_run():
+    import vega_train.run as m
+    return m
+
+
+def _imp_vega_superproof_seal_superproof():
+    import vega_superproof.seal.superproof as m
+    return m
+
+
+_IMPORTERS = {"vega_harness.conductor": _imp_vega_harness_conductor, "vega_harness.records": _imp_vega_harness_records, "vega_harness.arsenal": _imp_vega_harness_arsenal, "vega_harness.reasoning_pipeline": _imp_vega_harness_reasoning_pipeline, "vega_twogate.kronos.contain": _imp_vega_twogate_kronos_contain, "vega_jacket.gate.entry_gate": _imp_vega_jacket_gate_entry_gate, "vega_pareah.cards.pre": _imp_vega_pareah_cards_pre, "vega_pareah.adapter.airlock": _imp_vega_pareah_adapter_airlock, "vega_pareah.adapter.pareah": _imp_vega_pareah_adapter_pareah, "vega_identity.service": _imp_vega_identity_service, "vega_journal.journal": _imp_vega_journal_journal, "vega_journal.private": _imp_vega_journal_private, "vega_jurisdiction.protocol": _imp_vega_jurisdiction_protocol, "vega_need.book": _imp_vega_need_book, "vega_train.run": _imp_vega_train_run, "vega_superproof.seal.superproof": _imp_vega_superproof_seal_superproof, "vega_terminal.session": _terminal_session, "vega_reasoning.records": _reasoning_records, "vega_reasoning.morna": _reasoning_morna, "vega_reasoning.lyra": _reasoning_lyra, "vega_council.deliberation": _council_deliberation, "vega_council.builder": _council_builder, "vega_council.library": _council_library, "vega_metacog.requirements": _metacog_requirements, "vega_trace.nnr": _trace_nnr, "vega_feed.feed": _feed_feed}

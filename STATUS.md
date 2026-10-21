@@ -8,7 +8,7 @@
 - feedback
 - __main__
 
-Tests: 61 tests in 5 files, all passing.
+Tests: 74 tests in 6 files, all passing.
 
 ## DESIGNED ONLY (not built)
 

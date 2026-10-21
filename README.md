@@ -36,7 +36,7 @@ This is governance above the model, not inside it. The model can reason, plan an
 | Declared dependencies | custody, governance-jacket, terminal, trace, reasoning, metacog, governance-feed, council |
 | Python | 3.10 or newer, pure Python |
 | Command line | `python -m vega_umbrella status`, `order`, `audit ROOT LICENSE_SHA256` |
-| Tests | 61 tests in 5 files, all passing (STATUS.md) |
+| Tests | 74 tests in 6 files, all passing (STATUS.md) |
 | Status | Reference implementation, work in progress |
 
 **Contents:** [Capabilities](#capabilities) · [Flow](#end-to-end-flow) · [Controls](#controls) · [Cannot do](#what-it-cannot-do) · [Platforms](#platform-support) · [Install](#install-standalone-and-unified) · [Diagnostics](#diagnostic-control) · [Fail closed](#fail-closed-and-custom-constraints) · [Family map](#the-family-map) · [Tests](#tests)
@@ -77,6 +77,27 @@ flowchart LR
 5. **Anchor.** One chain records every lane's head hash, so one root covers the whole organism.
 6. **Audit.** `audit_family` reads the SDK folders and reports READY or BLOCKED. It never writes and never publishes.
 
+## What the Organism wires
+
+One human key, one keyed ledger, one approval path and one chain per kit. Today the Organism builds, from that shared base:
+
+| Kit | Organism method | What it gets from the organism |
+|---|---|---|
+| vega-harness-sdk | `conductor()`, `plan()`, `arsenal()` | human-only steps and the frozen path are checked against the organism's ledger; the pipeline asks the arsenal |
+| vega-two-gate-sdk | `containment()`, `lift_hard_stop()` | jobs run only on a commitment for exactly that job; the hard stop lifts only on the human key |
+| vega-pareah-sdk | `airlock()`, `pareah()`, `pre_deck()` | the union commitment is burned through the organism's one Commit; a revoked PRE stops an open connection |
+| vega-identity-sdk | `identity()` | its record goes to the identity lane |
+| vega-journal-sdk | `journal()`, `private_journal()` | its record goes to the journal lane |
+| vega-jurisdiction-sdk | `jurisdictions()` | registration needs the organism's human commitment |
+| vega-proof-of-need-sdk | `need_book()` | releases need the organism's human commitment |
+| vega-train-sdk | `training_run()` | a run needs a commitment from the organism's ledger and one shared record of spent commitments |
+| vega-superproof-sdk | `seal()` | the seal's root is minted on the organism's ledger |
+| terminal, reasoning, council, metacog, trace, feed | `terminal()`, `router()`, `council()`, `builder()`, `metacog_ledger()`, `observe_ledger()`, `feed()` | as before |
+
+`commit_for(action, params, signed)` turns a human signature for exactly that action and those parameters into a minted commitment on the shared ledger; hand it to whichever gate asks. `anchor()` records every lane's head, so one root hash covers all of it.
+
+Not wired yet: vega-dkg-lattice-sdk (repo ingestion), vega-galaxy-sdk, vega-chip-sdk (a model, not a runtime), vega-librarian-sdk (its lesson ledger is configured by environment variable, not by the organism), and the two unpublished kits. The cross-kit behaviour is covered by `tests/test_integration_20261020.py`.
+
 ## Controls
 
 | Control | What it does |
@@ -107,7 +128,7 @@ flowchart LR
 
 ## Install standalone and unified
 
-**Standalone.** `pip install -e .` installs the umbrella and declares eight family dependencies. The registry, audit and feedback modules need only the custody kit; the Organism imports other SDKs only when a lane asks for them.
+**Standalone.** `pip install -e .` installs the umbrella and declares seventeen family dependencies. The registry, audit and feedback modules need only the custody kit; the Organism imports other SDKs only when a lane asks for them.
 
 **Unified.** This is the unifying kit. Its registry entry is layer 15, `assemble`, owning the assembly of the family as one organism. The family map is in [ORGANISM.md](ORGANISM.md).
 
@@ -127,7 +148,7 @@ Twenty-two kits ship in this release (19 built, 3 partial); the registry also li
 
 ## Tests
 
-61 tests in 5 files, all passing (STATUS.md). Put this repo's `src` and the `src` of its dependencies on `PYTHONPATH`, then run each file in `tests/`.
+74 tests in 6 files, all passing (STATUS.md). Put this repo's `src` and the `src` of its dependencies on `PYTHONPATH`, then run each file in `tests/`.
 
 ## Status and honesty
 
