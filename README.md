@@ -132,6 +132,8 @@ Not wired yet: vega-dkg-lattice-sdk (repo ingestion), vega-galaxy-sdk, vega-chip
 
 **Unified.** This is the unifying kit. Its registry entry is layer 15, `assemble`, owning the assembly of the family as one organism. The family map is in [ORGANISM.md](ORGANISM.md).
 
+Step-by-step install from GitHub, and how to use the kits in VS Code: [USE_IN_VS_CODE.md](USE_IN_VS_CODE.md).
+
 ## Diagnostic control
 
 The command line above is the diagnostic surface. `status` and `order` are read-only. `audit` returns a JSON report with the per-SDK reasons and exits non-zero for BLOCKED. A diagnostic UI design for this layer exists in the Vega OS interface program; it is not shipped with this package.
