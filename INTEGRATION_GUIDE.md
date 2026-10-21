@@ -2,6 +2,8 @@
 
 The Vega kits are Python libraries. They do not call any model or network service themselves. You supply the model calls, and the kits decide what may enter and leave around them. This guide shows how to install them on common systems, how to connect them to models, and how to put a gate in front of an agent command-line tool.
 
+> **Where to find this guide.** The home page of this GitHub account explains what is here and points to this file, which lives in the `vega-umbrella-sdk` build. Each kit's README opens with its own build-order banner.
+
 **Contents:** [What is tested](#what-was-tested-and-what-was-not) · [1 The idea in one minute](#1-the-idea-in-one-minute) · [2 Install on your system](#2-install-on-your-system) · [3 Connect models](#3-connect-models) · [4 Run the council on real models](#4-run-the-council-on-real-models) · [5 Put a gate in front of an agent CLI](#5-put-a-gate-in-front-of-an-agent-cli) · [6 Keys](#6-keys-and-secrets) · [7 Limits](#7-limits)
 
 ## What was tested and what was not
@@ -33,6 +35,37 @@ You need Python 3.10 or newer. Install the kits **in dependency order with `--no
 | **VS Code** | See [USE_IN_VS_CODE.md](USE_IN_VS_CODE.md). |
 
 Two kits need extra packages: anything that seals data uses `cryptography`. Install it with `pip install cryptography`.
+
+## Install order for every kit
+
+Every kit's README starts with a banner like **Build order 5/5** that lists exactly what to install first. The same information in one table (generated from each kit's declared dependencies):
+
+| Kit | What it does | Build order | Install these first (in order) |
+|---|---|---|---|
+| [custody](https://github.com/jasonblasiak868-code/vega-custody-sdk) | Tamper-evident chain of custody for AI actions: capsules, hash-chained ledger, safe paths, bounded processes. | 1/1 | none |
+| [governance-feed](https://github.com/jasonblasiak868-code/vega-governance-feed-sdk) | Live view of every governance chain with tamper alarms. | 2/2 | `custody` |
+| [governance-jacket](https://github.com/jasonblasiak868-code/vega-governance-jacket-sdk) | Human-only authority for AI agents: single-use, time-limited signed commitments with entry and exit gates. | 2/2 | `custody` |
+| [librarian](https://github.com/jasonblasiak868-code/vega-librarian-sdk) | Lessons and memory of past incidents so an AI system learns from what went wrong. | 2/2 | `custody` |
+| [metacog](https://github.com/jasonblasiak868-code/vega-metacog-sdk) | Evidence rungs and a completion gate: an AI cannot claim done without the evidence. | 2/2 | `custody` |
+| [reasoning](https://github.com/jasonblasiak868-code/vega-reasoning-sdk) | Reasoning fidelity, forecasting and routing: a lattice that predicts steps ahead. | 2/2 | `custody` |
+| [superproof](https://github.com/jasonblasiak868-code/vega-superproof-sdk) | Layered sealing and proof tiers for private data: zero-knowledge interfaces, updatable encryption, fail-closed tiers. | 2/2 | `custody` |
+| [trace](https://github.com/jasonblasiak868-code/vega-trace-sdk) | Telemetry of AI reasoning: layer traces, entropy, harmonic echo and a reference signature. | 2/2 | `custody` |
+| [chip](https://github.com/jasonblasiak868-code/vega-chip-sdk) | Governance hardware reference model in software: a Governance Enforcement Unit and a runtime unit that enforce human-signed, single-use commitments, w | 3/3 | `custody`, `governance-jacket` |
+| [galaxy](https://github.com/jasonblasiak868-code/vega-galaxy-sdk) | The galaxy view of a knowledge lattice: necessary conditions from below, possible futures from above. | 3/3 | `custody`, `reasoning` |
+| [identity](https://github.com/jasonblasiak868-code/vega-identity-sdk) | Identity verification for AI-governed systems: passwords, authenticator codes, phone codes, voice and biometric match, knowledge-graph questions, and  | 3/3 | `custody`, `governance-jacket` |
+| [journal](https://github.com/jasonblasiak868-code/vega-journal-sdk) | A private, encrypted, hash-chained question-and-answer journal with a thought-genome map: every idea anchored to its first appearance, with Merkle rec | 3/3 | `custody`, `superproof` |
+| [jurisdiction](https://github.com/jasonblasiak868-code/vega-jurisdiction-sdk) | Jurisdictional protocol keys for AI governance: branch keys, a 2-of-3 policy, a public veto and the hard-stop root, so legal minimums are enforced in  | 3/3 | `custody`, `governance-jacket` |
+| [terminal](https://github.com/jasonblasiak868-code/vega-terminal-sdk) | Gated command execution for people and AI agents: nothing runs without an approved commitment. | 3/3 | `custody`, `governance-jacket` |
+| [two-gate](https://github.com/jasonblasiak868-code/vega-two-gate-sdk) | Kronos: two-gate containment for any program or AI agent, with a verified kill, verified teardown and a hard stop only the human key can lift. | 3/3 | `custody`, `governance-jacket` |
+| [harness](https://github.com/jasonblasiak868-code/vega-harness-sdk) | Deterministic agent workflow harness: pre-registered paths, licence use gate, replayable conduct. | 4/4 | `custody`, `governance-jacket`, `librarian` |
+| [pareah](https://github.com/jasonblasiak868-code/vega-pareah-sdk) | Adapter and quarantine layer: admits only what the owner announced and holds unknown agents in a dead-end room. | 4/4 | `custody`, `governance-jacket`, `superproof` |
+| [council](https://github.com/jasonblasiak868-code/vega-council-sdk) | Anonymous multi-brain deliberation that always carries dissent, plus a design-first builder with human taste decisions. | 5/5 | `custody`, `governance-jacket`, `librarian`, `harness` |
+| [dkg-lattice](https://github.com/jasonblasiak868-code/vega-dkg-lattice-sdk) | Licence-aware knowledge graph with provenance for every fact and a predictive lattice. | 5/5 | `custody`, `governance-jacket`, `librarian`, `harness` |
+| [proof-of-need](https://github.com/jasonblasiak868-code/vega-proof-of-need-sdk) | Proof of need and proof of payment: a co-signed constitution, advisory need analysis, human-approved releases from a simulated bankroll, institution r | 5/5 | `custody`, `governance-jacket`, `identity`, `superproof` |
+| [train](https://github.com/jasonblasiak868-code/vega-train-sdk) | Governed model training that records exactly what a model learned from, with held-out test separation. | 8/8 | `custody`, `governance-jacket`, `librarian`, `harness`, `dkg-lattice`, `superproof`, `pareah` |
+| [umbrella](https://github.com/jasonblasiak868-code/vega-umbrella-sdk) | The umbrella that assembles the Vega SDK family as one organism: registry, one keyed ledger, one approval check, pre-deploy audit. | 20/20 | `custody`, `governance-jacket`, `librarian`, `harness`, `council`, `governance-feed`, `identity`, `superproof`, `journal`, `jurisdiction`, `metacog`, `pareah`, `proof-of-need`, `reasoning`, `terminal`, `trace`, `dkg-lattice`, `train`, `two-gate` |
+
+Kits with the same dependencies can be installed in any order among themselves. A kit also needs the extra Python packages named in its banner (for example `cryptography`).
 
 ## 3. Connect models
 

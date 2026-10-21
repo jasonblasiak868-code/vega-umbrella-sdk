@@ -2,6 +2,30 @@
 
 ![vega-umbrella-sdk](assets/tile.svg)
 
+<!-- vega-install-order -->
+> **Build order: 20/20. This kit needs 19 other Vega kits installed first.** Install them in this order, then this one:
+> 1/20 `vega-custody-sdk`  
+> 2/20 `vega-governance-jacket-sdk`  
+> 3/20 `vega-librarian-sdk`  
+> 4/20 `vega-harness-sdk`  
+> 5/20 `vega-council-sdk`  
+> 6/20 `vega-governance-feed-sdk`  
+> 7/20 `vega-identity-sdk`  
+> 8/20 `vega-superproof-sdk`  
+> 9/20 `vega-journal-sdk`  
+> 10/20 `vega-jurisdiction-sdk`  
+> 11/20 `vega-metacog-sdk`  
+> 12/20 `vega-pareah-sdk`  
+> 13/20 `vega-proof-of-need-sdk`  
+> 14/20 `vega-reasoning-sdk`  
+> 15/20 `vega-terminal-sdk`  
+> 16/20 `vega-trace-sdk`  
+> 17/20 `vega-dkg-lattice-sdk`  
+> 18/20 `vega-train-sdk`  
+> 19/20 `vega-two-gate-sdk`  
+> 20/20 `vega-umbrella-sdk` (this kit)
+> Install each with `pip install --no-deps git+https://github.com/jasonblasiak868-code/<name>` in the order shown, plus `pip install cryptography numpy safetensors`. Full steps: [INTEGRATION_GUIDE](https://github.com/jasonblasiak868-code/vega-umbrella-sdk/blob/main/INTEGRATION_GUIDE.md).
+
 **One organism from separate kits.** The Vega family is a set of small SDKs, each owning exactly one concern: records, human authority, sealing, containment, memory, knowledge, reasoning, deliberation and more. This kit is the umbrella. It holds the registry that says who owns what, assembles the family around one human key, one keyed ledger and one approval check, and runs a read-only audit before anything is deployed. Start here for the map of the whole family.
 
 > **Licensing.** Source-available, not open source. Free for personal use; free for registered small businesses (under US$1M revenue and valuation); everyone else needs a commercial license (see LICENSE; for a commercial license write to jasonblasiak.ai.mail@gmail.com). Patent pending. Draft licence text, not yet reviewed by an attorney.
